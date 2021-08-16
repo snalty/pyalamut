@@ -2,6 +2,7 @@ from lxml import etree
 from typing import IO
 from os import PathLike
 from enum import Enum
+from datetime import datetime, date, time
 
 class VariantType(Enum):
     SUBSTITION = "subsitution"
@@ -36,8 +37,25 @@ class MutationsParser():
         )
 
         mutation_class.variant = self._parse_variant(mutation.find('Variant'))
+        occurences = mutation.find('Occurrences').getchildren()
+        mutation_class.occurences = [self._parse_occurence(occurence) for occurence in occurences]
 
         return mutation_class
+
+    def _parse_occurence(self, occurence):
+        created = occurence.find('Created').attrib
+        updated = occurence.find('Updated').attrib
+
+
+        return Occurence(
+            created['date'],
+            created['time'],
+            updated['date'],
+            updated['time'],
+            occurence.find('Patient').text,
+            occurence.find('Family').text
+        )
+
 
     def _parse_variant(self, variant):
         v_dict = variant.attrib
@@ -59,8 +77,6 @@ class MutationsParser():
             )
 
     def _parse_nomenclature(self, variant):
-        # Parse lower level nomenclature
-        nomenclature_children = variant.get('Nomenclature')
         gnomen = variant.find('gNomen').attrib['val']
         nomenclature = variant.find('Nomenclature')
         refseq = nomenclature.attrib['refSeq']
@@ -118,5 +134,17 @@ class SubstitutionVariant(Variant):
         self.base_from = base_from
         self.base_to = base_to
 
-class VariantOccurence():
-    NotImplemented
+class Occurence():
+    def __init__(self, created_date_string, created_time_string,
+    updated_date_string, updated_time_string, patient, family):
+        self.created_datetime = self._parse_datetime(created_date_string,
+        created_time_string)
+        self.updated_datetie = self._parse_datetime(updated_date_string,
+        updated_time_string)
+        self.patient = patient
+        self.family = family
+        
+    def _parse_datetime(self, date_string, time_string):
+        date = datetime.strptime(date_string, "%Y-%m-%d").date()
+        time = datetime.strptime(time_string, "%H:%M:%S").time()
+        return datetime.combine(date, time)
