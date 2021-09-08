@@ -1,0 +1,4 @@
+[build-system]
+requires = [
+    "lxml>=4.6.3"
+]
