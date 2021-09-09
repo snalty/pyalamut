@@ -5,6 +5,12 @@ from .variants import DeletionVariant, DelinsVariant, DuplicationVariant, \
     InsertionVariant, SubstitutionVariant, Nomenclature
 from datetime import datetime
 
+
+class Classification():
+    def __init__(self, classification: etree):
+        self.class_string = classification.attrib['val']
+        self.index = int(classification.attrib['index'])
+
 class Mutations():
     """Simple class to hold mutations"""
     def __init__(self, mutations):
@@ -75,7 +81,7 @@ class Mutation():
         self.reference_assembly = reference_assembly
         self.chromosome = chromosome
         self.gene_symbol = gene_symbol
-        self.classification = classification
+        self.classification = Classification(classification)
         self.pathogenic = {'yes': True, 'no': False, 'unknown': None}[pathogenic]
         self.note = note
         self.variant = None
@@ -94,7 +100,7 @@ class MutationsParser():
             mutation_dict['refAssembly'],
             mutation_dict['chr'],
             mutation_dict['geneSym'],
-            mutation.find('Classification').attrib['val'],
+            mutation.find('Classification'),
             mutation.find('Pathogenic').attrib['val'], 
             mutation.find('Note').attrib['val']
         )
